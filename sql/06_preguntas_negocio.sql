@@ -1,0 +1,64 @@
+-- 1. ¿Qué laboratorios venden más?
+-- Suma el valor vendido por laboratorio para identificar los proveedores con mayor participación.
+SELECT laboratorio,
+       SUM(COALESCE(val_vendido, 0)) AS total_vendido
+FROM matriz_bcg
+GROUP BY laboratorio
+ORDER BY total_vendido DESC
+LIMIT 20;
+
+-- 2. ¿Qué productos generan más valor?
+-- Ordena productos por valor vendido, mostrando el código de barras y métricas de inventario.
+SELECT producto,
+       codigo_barras,
+       COALESCE(val_vendido, 0) AS val_vendido,
+       COALESCE(existencia, 0) AS existencia,
+       COALESCE(precio_venta, 0) AS precio_venta
+FROM matriz_bcg
+ORDER BY val_vendido DESC
+LIMIT 20;
+
+-- 3. ¿Qué vendedores tienen mejor desempeño?
+-- Calcula total vendido, promedio por venta y comisiones totales por asesor.
+SELECT v.nombre_vendedor,
+       COUNT(*) AS cantidad_ventas,
+       SUM(COALESCE(ve.valor_base, 0) * COALESCE(ve.cantidad, 0)) AS total_vendido,
+       ROUND(AVG(COALESCE(ve.valor_base, 0) * COALESCE(ve.cantidad, 0)), 2) AS promedio_por_venta,
+       SUM(COALESCE(ve.valor_comision, 0)) AS total_comision
+FROM ventas_especiales ve
+JOIN vendedores v ON ve.id_vendedor = v.id_vendedor
+GROUP BY v.nombre_vendedor
+ORDER BY total_vendido DESC
+LIMIT 20;
+
+-- 4. ¿Qué inventario está más comprometido?
+-- Estima el valor de stock por producto y compara con el valor vendido.
+SELECT producto,
+       codigo_barras,
+       laboratorio,
+       COALESCE(existencia, 0) AS existencia,
+       COALESCE(precio_venta, 0) AS precio_venta,
+       COALESCE(existencia, 0) * COALESCE(precio_venta, 0) AS valor_stock,
+       COALESCE(val_vendido, 0) AS val_vendido,
+       COALESCE(rentabilidad, 0) AS rentabilidad
+FROM matriz_bcg
+ORDER BY valor_stock DESC
+LIMIT 20;
+
+-- 5. ¿Qué productos tienen bajo desempeño respecto a su inventario?
+-- Un producto puede ser caro en stock pero tener baja rotación relativa.
+SELECT producto,
+       codigo_barras,
+       laboratorio,
+       COALESCE(existencia, 0) AS existencia,
+       COALESCE(precio_venta, 0) AS precio_venta,
+       COALESCE(existencia, 0) * COALESCE(precio_venta, 0) AS valor_stock,
+       COALESCE(val_vendido, 0) AS val_vendido,
+       COALESCE(rentabilidad, 0) AS rentabilidad,
+       CASE WHEN COALESCE(existencia, 0) = 0 THEN NULL
+            ELSE ROUND(COALESCE(val_vendido, 0) / existencia, 2)
+       END AS ventas_por_stock
+FROM matriz_bcg
+ORDER BY ventas_por_stock ASC,
+         valor_stock DESC
+LIMIT 20;
