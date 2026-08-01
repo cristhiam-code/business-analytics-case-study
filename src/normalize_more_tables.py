@@ -9,14 +9,20 @@ def to_float_safe(x):
     try:
         if pd.isna(x):
             return 0.0
+        # Si YA es un número (int o float), lo devolvemos directo,
+        # sin tratarlo como texto con separadores.
+        if isinstance(x, (int, float)):
+            return float(x)
+        # Si es texto, aplicamos limpieza de formato colombiano
         s = str(x).strip()
         if s == "":
             return 0.0
-        s = s.replace('.', '').replace(',', '')
-        s = ''.join(ch for ch in s if ch.isdigit())
-        if s == '':
-            return 0.0
-        return float(s)
+        s = s.replace('.', '').replace(',', '.')
+        try:
+            return float(s)
+        except ValueError:
+            s_digits = ''.join(ch for ch in s if ch.isdigit())
+            return float(s_digits) if s_digits else 0.0
     except Exception:
         return 0.0
 

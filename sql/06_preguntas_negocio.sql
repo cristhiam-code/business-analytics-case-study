@@ -62,3 +62,32 @@ FROM matriz_bcg
 ORDER BY ventas_por_stock ASC,
          valor_stock DESC
 LIMIT 20;
+
+-- 6. Pregunta: ¿Qué productos deberían reponerse primero? (alta rotación + poca existencia)
+
+SELECT "producto", "laboratorio", "existencia", "unid_vendidas"
+FROM "matriz_bcg"
+WHERE "existencia" < 15
+  AND "unid_vendidas" > 20
+ORDER BY "unid_vendidas" DESC
+; 
+
+-- Pregunta: ¿Qué laboratorios concentran el 80% de las ventas totales?
+-- (Análisis tipo Pareto / regla 80-20, usando función de ventana SUM() OVER())
+
+SELECT laboratorio, total_vendido,
+    SUM(total_vendido) OVER (ORDER BY total_vendido DESC) AS acumulado,
+    ROUND(
+        100.0 * SUM(total_vendido) OVER (ORDER BY total_vendido DESC)
+        / SUM(total_vendido) OVER (), 2
+    ) AS porcentaje_acumulado
+FROM (
+    SELECT "laboratorio", SUM("val_vendido") AS "total_vendido"
+    FROM "matriz_bcg"
+    GROUP BY "laboratorio"
+)
+ORDER BY total_vendido DESC
+;
+
+
+
