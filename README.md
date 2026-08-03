@@ -1,154 +1,130 @@
-  # Proyecto Farmanorte Analytics
+  # Farmanorte Portfolio Analytics
 
-  ## Descripción general
+## Resumen ejecutivo
 
-  Este proyecto analiza datos de Farmanorte a partir de varios archivos CSV y una base de datos SQLite. El objetivo es mostrar un flujo completo de limpieza, normalización e importación de datos, junto con consultas SQL que responden preguntas de negocio.
+Este repositorio presenta un caso de análisis comercial aplicado a una operación de droguería. El objetivo del proyecto es convertir datos operativos en señales útiles para la toma de decisiones en ventas, inventario y rentabilidad.
 
-  ## Objetivos
+La historia de negocio del proyecto es clara:
 
-- Analizar el comportamiento de las ventas.
-- Identificar los productos con mayor impacto en el negocio.
-- Evaluar el desempeño de los laboratorios.
-- Analizar el rendimiento de los vendedores.
-- Detectar oportunidades de mejora en el inventario.
-- Construir un flujo de trabajo reproducible para el análisis de datos.
+- identificar qué laboratorios y productos concentran mayor valor,
+- detectar qué inventario requiere revisión por su nivel de compromiso,
+- apoyar decisiones de operación con una base analítica reproducible.
 
-    
-  ## Estructura del proyecto
+## Contexto del negocio
 
-  - `data/raw/`: datos originales crudos
-  - `data/processed/`: datos procesados y listos para importar
-  - `database/`: base de datos SQLite (`farmanorte.db`) y backup (`farmanorte.db.bak`)
-  - `docs/diccionario_datos.md`: diccionario de datos del proyecto
-  - `src/`: scripts Python para limpieza, importación y normalización
-  - `sql/`: consultas SQL con ejemplos y preguntas de negocio
+El análisis se enfoca en un escenario de retail farmacéutico, donde el valor del negocio depende de la combinación entre:
 
-  ## Requisitos
+- volumen de ventas,
+- mix de productos,
+- participación de laboratorios,
+- inventario y rotación.
 
-  Instala las dependencias del proyecto con:
+## Problema de negocio
 
-  ```bash
-  pip install -r requirements.txt
-  ```
+La empresa necesita entender dónde está concentrado el valor del negocio y qué segmentos requieren atención operativa. El proyecto responde a esa necesidad mediante limpieza, normalización y análisis estructurado de las fuentes disponibles.
 
-  ## Scripts principales
+## Preguntas de negocio
 
-  ### 1. Limpiar y procesar datos
+- ¿Qué laboratorios aportan mayor valor comercial?
+- ¿Qué productos concentran más ventas y mayor relevancia en el portafolio?
+- ¿Qué inventario está más comprometido o requiere intervención?
+- ¿Qué señales permiten apoyar decisiones de ventas y reposición?
 
-  `python3 src/limpiar_kardex.py`
+## Qué demuestra este proyecto
 
-  - Lee `data/raw/kardex_productos.csv`
-  - Renombra columnas a formato canónico
-  - Guarda el archivo limpio en `data/processed/kardex_productos.csv`
+El proyecto evidencia que el autor puede:
 
-  ### 2. Importar datos a SQLite
+- preparar datos para análisis,
+- construir un flujo reproducible,
+- trabajar con SQL y Python,
+- documentar hallazgos de calidad,
+- transformar datos operativos en insights accionables.
 
-  `python3 src/importar_farmanorte.py`
+## Estructura del repositorio
 
-  - Importa `data/processed/kardex_productos.csv` a la tabla `productos` en `database/farmanorte.db`
+- `data/raw/`: fuentes crudas locales y no públicas.
+- `data/processed/`: datos preparados para importación y para mostrarse como evidencia analítica.
+- `database/`: base SQLite local usada para análisis; no debe publicarse en la versión abierta.
+- `docs/diccionario_datos.md`: diccionario de tablas y columnas.
+- `docs/hallazgos_calidad_datos.md`: hallazgos de negocio y calidad de datos.
+- `docs/publicacion_segura.md`: guía de preparación para una versión `safe publish`.
+- `src/`: scripts de limpieza, importación y normalización.
+- `sql/`: consultas analíticas del caso.
+- `notebooks/`: notebook como entregable final.
 
-  `python3 src/importar_matriz_bcg.py`
+## Requisitos
 
-  - Importa `data/raw/MatrizBCG2_limpio_v2.xlsx` a la tabla `matriz_bcg`
+```bash
+pip install -r requirements.txt
+```
 
-  `python3 src/importar_ventas_vendedores.py`
+## Ejecución reproducible
 
-  - Importa `data/raw/listado_especiales_completo.csv` y `data/raw/productos_especiales (1).csv`
-  - Crea las tablas `vendedores`, `ventas_especiales` y `productos_especiales`
+```bash
+python3 src/run_pipeline.py
+```
 
-  ### 3. Normalización adicional
+El pipeline ejecuta las etapas principales en orden:
 
-  `python3 src/normalize_productos.py`
+1. limpieza del kardex,
+2. importación a SQLite,
+3. carga de la matriz BCG,
+4. carga de ventas y productos especiales,
+5. normalización de tablas principales.
 
-  - Normaliza la tabla `productos` en la base de datos para usar nombres canónicos y tipos numéricos correctos.
+## Scripts principales
 
-  `python3 src/normalize_more_tables.py`
+- `src/limpiar_kardex.py`: limpia y normaliza el archivo de inventario.
+- `src/importar_farmanorte.py`: importa el kardex a SQLite.
+- `src/importar_matriz_bcg.py`: carga la matriz BCG.
+- `src/importar_ventas_vendedores.py`: carga ventas y vendedores.
+- `src/normalize_productos.py`: normaliza la tabla principal.
+- `src/normalize_more_tables.py`: normaliza tablas complementarias.
 
-  - Normaliza las tablas `matriz_bcg` y `productos_especiales`
-  - Conserva los respaldos en tablas con sufijo `_old_backup`
+## Consultas de negocio
 
-  ## Pipeline completo
+La consulta central de este caso está en `sql/06_preguntas_negocio.sql` y sirve como evidencia del análisis de negocio.
 
-  Ejecuta los siguientes comandos en el orden indicado para reproducir el flujo completo:
+## Hallazgos clave
 
-  ```bash
-  pip install -r requirements.txt
-  python3 src/run_pipeline.py
-  ```
+Este proyecto permite identificar patrones de negocio importantes como:
 
-  Después puedes abrir la base de datos con SQLite y ejecutar las consultas en `sql/06_preguntas_negocio.sql`.
+- concentración de valor en pocos laboratorios,
+- relevancia de ciertos productos en el mix comercial,
+- inventario con alto valor asociado y necesidad de revisión,
+- señales de desempeño útiles para priorizar decisiones operativas.
 
-  ## Consultas SQL
+## Versión pública y segura
 
-  ### Archivos existentes
+La versión pública del repositorio debe presentar el caso analítico sin incluir información operativa sensible. Para una publicación en GitHub o LinkedIn, conviene:
 
-  - `sql/01_joins_basicos.sql`
-  - `sql/02_subqueries.sql`
-  - `sql/03_agregaciones_group_by.sql`
-  - `sql/04_busquedas_like.sql`
-  - `sql/05_rankings_ventas.sql`
-  - `sql/06_preguntas_negocio.sql`
+- mantener el código, la documentación y el notebook como evidencia,
+- excluir la base local y las fuentes crudas,
+- publicar solo la capa analítica y documentada del proyecto.
 
-  ### Preguntas de negocio atendidas
+La estrategia recomendada está resumida en `docs/publicacion_segura.md`.
 
-  El archivo `sql/06_preguntas_negocio.sql` responde directamente a estas preguntas:
-  - ¿Qué laboratorios venden más?
-  - ¿Qué productos generan más valor?
-  - ¿Qué vendedores tienen mejor desempeño?
-  - ¿Qué inventario está más comprometido o menos rentable?
+## Notas de calidad y reproducibilidad
 
-  ## Resultados principales
+- El flujo se mantiene reproducible.
+- La documentación expone limitaciones y correcciones aplicadas.
+- La versión pública debe usar solo una capa segura de outputs y documentación, sin incluir datos crudos ni la base local.
+- El proyecto está preparado para ser presentado como un caso analítico, no solo como un conjunto de scripts.
 
-  Estos son los resultados obtenidos tras ejecutar las consultas sobre la base normalizada:
+## Verificación del análisis
 
-  - Laboratorios top por valor vendido:
-    - `TRIDEX FARMACEUTICA`: 78.250.000
-    - `NESTLE NUTRICION`: 50.797.000
-    - `ABBOTT NUTRICION`: 47.612.700
-    - `A.G. MEDICAMENTOS`: 32.895.000
-    - `HALEON (GLAXO OTC)`: 30.121.700
+```bash
+cd /home/cristhiam/data-analytics-portafolio/proyecto-farmanorte
+sqlite3 database/farmanorte.db
+.headers on
+.mode column
+.read sql/06_preguntas_negocio.sql
+```
 
-  - Productos top por valor vendido:
-    - `MOUNJARO 2.5MG/0.5ML * 1 AMP`
-    - `ELECTROLIT MARACUYA * 625 ML`
-    - `ENTEROGERMINA * 10 AMP`
-    - `NESTOGENO TOTAL COMFORT *400 GR`
-    - `PEDIALYTE MAX ZINC 60 FRESA * 500 ML`
-
-  - Vendedores top por desempeño (total vendido):
-    - `Cristhiam Adrian Botero Rojas`
-    - `Jorge Hernando Sanjuan Vega`
-    - `John Pablo  Hernandez  Arevalo`
-
-  - Inventario más comprometido por valor de stock:
-    - `MOUNJARO 2.5MG/0.5ML * 1 AMP`
-    - `CONGESTEX * 10 CAP`
-    - `ELECTROLIT MARACUYA * 625 ML`
-
-  ## Notas importantes
-
-  - Se creó un backup de la base de datos original en `database/farmanorte.db.bak`.
-  - Las tablas con datos transformados y respaldos existen como:
-    - `productos_old_backup`
-    - `matriz_bcg_old_backup`
-    - `productos_especiales_old_backup`
-
-  ## Cómo verificar los datos
-
-  Para ejecutar una consulta SQL desde la terminal:
-
-  ```bash
-  cd /home/cristhiam/data-analytics-portafolio/proyecto-farmanorte
-  sqlite3 database/farmanorte.db
-  .headers on
-  .mode column
-  .read sql/06_preguntas_negocio.sql
-  ```
-
-  También puedes copiar cualquier consulta de los archivos en `sql/` y ejecutarla directamente en SQLite.
+> En la versión pública, esta verificación debe ejecutarse con un dataset local seguro y no con la fuente de producción original.
 
 ## Autor
 
 **Cristhiam Adrián Botero Rojas**
 
-Proyecto desarrollado como parte de un portafolio de análisis de datos utilizando información real de una droguería para demostrar habilidades en SQL, Python, análisis exploratorio y resolución de problemas de negocio.
+Proyecto desarrollado como caso de análisis de negocio para mostrar habilidades en SQL, Python, preparación de datos, análisis exploratorio y uso de información para decisiones comerciales. 

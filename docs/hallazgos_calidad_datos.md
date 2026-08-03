@@ -1,25 +1,25 @@
 # Hallazgos de calidad de datos — Proyecto Farmanorte
 
-Este documento registra problemas de calidad de datos detectados durante el
-análisis de `matriz_bcg`, cómo se investigaron, y qué se hizo al respecto.
-Se documentan como parte del proceso normal de análisis, no como errores
-que invaliden el proyecto.
+Este documento resume los problemas de calidad detectados durante el análisis, su impacto en la interpretación del negocio y la forma en que se gestionaron.
 
----
+## Resumen ejecutivo
 
-## 1. Precio de venta inflado por error en función de limpieza (CORREGIDO)
+En este proyecto, la calidad de datos se trató como una parte del análisis de negocio y no solo como una tarea técnica. La intención fue verificar si los indicadores eran confiables para apoyar decisiones de operación.
+
+Los hallazgos principales muestran que:
+
+- el flujo de transformación puede corregir errores de formato,
+- algunas columnas tienen limitaciones de origen que deben documentarse,
+- y el valor de negocio no depende solo de la limpieza, sino también de la forma en que se interpreta la información.
+
+## 1. Error de formato en precio de venta (corregido)
 
 **Cómo se detectó:**
-Al listar los productos con mayor valor vendido, el precio registrado de
-MOUNJARO 2.5MG/0.5ML no coincidía con el precio real conocido del negocio
-(el producto no supera los $250.000, pero el sistema mostraba $2.569.000).
+Se identificó una discrepancia entre el valor del precio observado en el análisis y la referencia comercial esperada para un producto relevante del portafolio.
 
 **Investigación:**
-- Se comparó el archivo fuente (`MatrizBCG2_limpio_v2.xlsx`) contra la base
-  de datos: el Excel tenía el precio correcto ($256.900).
-- Se identificó que el error se introducía en el script
-  `src/normalize_more_tables.py`, en la función `to_float_safe()`.
-
+- Se comparó la fuente disponible con la salida analítica y se confirmó que la discrepancia estaba en el tratamiento del dato, no en la fuente base.
+- Se localizó el problema en la etapa de normalización y se corrigió la lógica de conversión.
 **Causa raíz:**
 La función estaba diseñada para limpiar precios en formato de texto
 colombiano (ej. `"1.500,50"`), pero no distinguía si el valor ya llegaba
@@ -28,11 +28,7 @@ función lo convertía a texto (`"256900.0"`) y eliminaba el punto pensando
 que era separador de miles, generando `2569000.0` — un cero de más.
 
 **Corrección aplicada:**
-Se modificó `to_float_safe()` para devolver directamente el valor si ya es
-numérico (`int`/`float`), y solo aplicar la limpieza de formato de texto
-cuando el dato llega como string. Se volvió a correr el pipeline completo
-(`run_pipeline.py`) y se regeneraron el notebook de análisis y los CSV
-exportados.
+Se ajustó la lógica para evitar transformar valores ya normalizados como texto, preservando el formato numérico correcto antes de continuar con el análisis.
 
 **Alcance:** afectaba la columna `precio_venta` (y por extensión
 `val_vendido`) en `matriz_bcg` y `productos_especiales`, para todo valor
@@ -45,9 +41,7 @@ que llegara como número desde el Excel de origen.
 ## 2. Columna `costo_promedio` vacía en el 100% del catálogo (LIMITACIÓN CONOCIDA)
 
 **Cómo se detectó:**
-Al calcular el margen de rentabilidad (`rentabilidad / val_vendido`), varios
-productos mostraban un margen de exactamente 100%, lo cual no es realista
-(todo producto tiene un costo de compra).
+Al validar la consistencia del margen, se encontró que una parte significativa del catálogo mostraba una expectativa de costo inexistente en la fuente disponible.
 
 **Investigación:**
 ```sql
@@ -73,15 +67,9 @@ Los otros 1138 (99.6%) tienen un valor de rentabilidad distinto y
 consistente con un cálculo real de margen.
 
 **Conclusión:**
-- La columna `rentabilidad` **sí es confiable** para el 99.6% del catálogo.
-  Probablemente el sistema de origen calcula el margen internamente sin
-  exponer el costo real en la columna `costo_promedio`.
-- Los 5 casos donde `rentabilidad = val_vendido` corresponden a productos
-  con `unid_vendidas = 1` (una sola venta registrada) — es probable que el
-  sistema no tuviera costo de referencia para productos de tan baja
-  rotación.
-- La columna `costo_promedio` **no debe usarse** en ningún análisis
-  mientras siga vacía en el origen.
+- La columna `rentabilidad` mantiene valor analítico para la gran mayoría del catálogo.
+- La ausencia de `costo_promedio` en la fuente impide usar esa columna como base de comparación de margen.
+- La limitación del dato debe reconocerse explícitamente para evitar sobreinterpretación en decisiones comerciales.
 
 **Estado:** ⚠️ Limitación conocida, no corregible desde el proyecto (depende
 de que el sistema de origen exporte el costo real). Pendiente de consultar
@@ -89,12 +77,12 @@ con Farmanorte si ese dato existe en otro reporte.
 
 ---
 
-## Cómo se investigan hallazgos de calidad de datos en este proyecto
+## Recomendación ejecutiva
 
-1. No se asume que un dato "raro" es un error sin comprobarlo con SQL.
-2. Se compara siempre contra la fuente original (Excel/CSV) antes de
-   sospechar de un script.
-3. Se cuantifica el alcance del problema (¿cuántas filas afecta?) antes de
-   decidir si corregir o documentar.
-4. Toda corrección de código se verifica con una consulta puntual después
-   de aplicarla.
+Para una versión de portafolio, el valor de estos hallazgos está en demostrar rigor analítico y criterio de negocio:
+
+- se identificaron y corrigieron errores de tratamiento,
+- se documentaron limitaciones reales de la fuente,
+- y se evitó la generación de conclusiones basadas en datos mal interpretados.
+
+Eso convierte la calidad de datos en una fortaleza del caso, no en un obstáculo técnico.

@@ -2,3 +2,11 @@
 __pycache__/
 *.pyc
 .~lock.*#
+
+data/raw/
+database/*.db
+database/*.db.bak
+
+database/*.sqlite
+
+database/*.sqlite3
