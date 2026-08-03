@@ -1,4 +1,4 @@
-  # Farmanorte Portfolio Analytics
+  # Business Analytics Case Study with SQL and Python
 
 ## Resumen ejecutivo
 
@@ -75,7 +75,6 @@ El pipeline ejecuta las etapas principales en orden:
 ## Scripts principales
 
 - `src/limpiar_kardex.py`: limpia y normaliza el archivo de inventario.
-- `src/importar_farmanorte.py`: importa el kardex a SQLite.
 - `src/importar_matriz_bcg.py`: carga la matriz BCG.
 - `src/importar_ventas_vendedores.py`: carga ventas y vendedores.
 - `src/normalize_productos.py`: normaliza la tabla principal.
@@ -114,8 +113,7 @@ La estrategia recomendada está resumida en `docs/publicacion_segura.md`.
 ## Verificación del análisis
 
 ```bash
-cd /home/cristhiam/data-analytics-portafolio/proyecto-farmanorte
-sqlite3 database/farmanorte.db
+sqlite3 database/<database_local>.db
 .headers on
 .mode column
 .read sql/06_preguntas_negocio.sql
